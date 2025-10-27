@@ -100,6 +100,18 @@ createApp({
       this.searchQuery = query;
       this.handleSearch();
     },
+    clearSearch() {
+      this.searchQuery = '';
+      this.hasSearched = false;
+      this.results = [];
+      this.currentPage = 1;
+      this.searchTimer = 0;
+      // Clear timer if running
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+    },
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
