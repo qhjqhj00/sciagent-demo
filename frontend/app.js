@@ -43,7 +43,7 @@ createApp({
   methods: {
     async loadConfig() {
       try {
-        const response = await fetch('http://localhost:12312/api/config');
+        const response = await fetch(`${api_url}/config`);
         const config = await response.json();
         this.recommendedQueries = config.recommended_queries;
       } catch (error) {
@@ -54,7 +54,7 @@ createApp({
     },
     async loadTestData() {
       try {
-        const response = await fetch('http://localhost:12312/api/test_data');
+        const response = await fetch(`${api_url}/test_data`);
         this.testData = await response.json();
       } catch (error) {
         console.error('Error loading test data:', error);
@@ -62,7 +62,7 @@ createApp({
     },
     async loadStats() {
       try {
-        const response = await fetch('http://localhost:12312/api/stats');
+        const response = await fetch(`${api_url}/stats`);
         this.stats = await response.json();
       } catch (error) {
         console.error('Error loading stats:', error);
