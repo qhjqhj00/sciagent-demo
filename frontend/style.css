@@ -88,10 +88,15 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+.search-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
 .search-box {
   display: flex;
-  gap: 10px;
-  margin-bottom: 25px;
+  flex: 1;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
@@ -116,7 +121,7 @@ body {
   padding: 0 30px;
   cursor: pointer;
   color: white;
-  transition: opacity 0.3s;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +129,26 @@ body {
 
 .search-button:hover {
   opacity: 0.9;
+}
+
+.clear-button {
+  background: #f5f5f5;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 0 25px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+
+.clear-button:hover {
+  background: #e0e0e0;
+  border-color: #c0c0c0;
+  color: #333;
 }
 
 /* Recommended Queries */
@@ -460,6 +485,15 @@ body {
 
   .search-container {
     padding: 25px;
+  }
+
+  .search-row {
+    gap: 8px;
+  }
+
+  .clear-button {
+    padding: 0 20px;
+    min-width: 50px;
   }
 
   .results-section {

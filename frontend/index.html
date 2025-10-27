@@ -36,18 +36,25 @@
     <!-- Search Section -->
     <section class="search-section">
       <div class="search-container">
-        <div class="search-box">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            @keyup.enter="handleSearch"
-            placeholder="Search for papers, authors, topics..."
-            class="search-input"
-          />
-          <button @click="handleSearch" class="search-button">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="m19 19-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <div class="search-row">
+          <div class="search-box">
+            <input 
+              type="text" 
+              v-model="searchQuery" 
+              @keyup.enter="handleSearch"
+              placeholder="Search for papers, authors, topics..."
+              class="search-input"
+            />
+            <button @click="handleSearch" class="search-button" title="Search">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="m19 19-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <button @click="clearSearch" class="clear-button" title="Clear">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.5 4.5l-9 9M4.5 4.5l9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
         </div>
