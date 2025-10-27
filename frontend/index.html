@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Paper Search</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="title">AI Research Hub</h1>
+      <p class="slogan">Discover cutting-edge research in one place</p>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-section">
+      <div class="search-container">
+        <div class="search-box">
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            @keyup.enter="handleSearch"
+            placeholder="Search for papers, authors, topics..."
+            class="search-input"
+          />
+          <button @click="handleSearch" class="search-button">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="m19 19-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Recommended Queries -->
+        <div class="recommended-queries">
+          <span class="recommended-label">Try these:</span>
+          <button 
+            v-for="(query, index) in recommendedQueries" 
+            :key="index"
+            @click="searchWithQuery(query)"
+            class="query-chip"
+          >
+            {{ query }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section" v-if="hasSearched">
+      <div class="results-header">
+        <h2 class="results-title">{{ results.length }} results found</h2>
+        <p class="results-subtitle" v-if="searchQuery">for "{{ searchQuery }}"</p>
+      </div>
+
+      <div class="results-container">
+        <div 
+          v-for="(paper, index) in paginatedResults" 
+          :key="index"
+          class="paper-card"
+        >
+          <div class="card-header">
+            <span class="card-number">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</span>
+            <h3 class="card-title">{{ paper.title }}</h3>
+          </div>
+
+          <div class="card-content">
+            <div class="card-meta-row">
+              <div class="meta-item">
+                <svg class="meta-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="currentColor"/>
+                  <path d="M2 13.5a6 6 0 0 1 12 0v.5H2v-.5z" fill="currentColor"/>
+                </svg>
+                <span class="card-authors">{{ paper.authors }}</span>
+              </div>
+            </div>
+
+            <div class="card-meta-row">
+              <div class="meta-item">
+                <svg class="meta-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 1l-6 2v4c0 3.3 2.7 6 6 6s6-2.7 6-6V3l-6-2zm0 11c-2.2 0-4-1.8-4-4V4.1l4-1.4 4 1.4V8c0 2.2-1.8 4-4 4z" fill="currentColor"/>
+                </svg>
+                <span class="card-orgs">{{ paper.orgs }}</span>
+              </div>
+            </div>
+
+            <div class="card-abstract">
+              <p>{{ paper.abs }}</p>
+            </div>
+
+            <div class="card-footer">
+              <div class="meta-info">
+                <svg class="meta-icon-small" width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm1 11H7V7h2v4zM8 6c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1z" fill="currentColor"/>
+                </svg>
+                <span>{{ paper.meta }}</span>
+              </div>
+              <a :href="paper.url" target="_blank" class="card-link">
+                View Paper
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M13 1L5 9M13 1h-4M13 1v4m0-4L7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" v-if="hasSearched && results.length > itemsPerPage">
+        <button @click="prevPage" :disabled="currentPage === 1" class="page-btn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Previous
+        </button>
+        
+        <div class="page-numbers">
+          <button 
+            v-for="page in totalPages" 
+            :key="page"
+            @click="goToPage(page)"
+            :class="['page-number', { active: currentPage === page }]"
+          >
+            {{ page }}
+          </button>
+        </div>
+        
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="page-btn">
+          Next
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Empty State -->
+    <section class="empty-state" v-if="!hasSearched">
+      <div class="empty-icon">📚</div>
+      <h3>Start Your Research Journey</h3>
+      <p>Search for research papers, explore authors, or discover new topics.</p>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

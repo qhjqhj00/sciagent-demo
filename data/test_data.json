@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Deep Learning for Natural Language Processing: A Comprehensive Survey",
+    "authors": "John Smith, Maria Garcia, David Chen",
+    "orgs": "Stanford University, MIT, Google Research",
+    "abs": "This paper presents a comprehensive survey of deep learning techniques applied to natural language processing tasks. We review recent advances in transformer architectures, pre-trained language models, and their applications across various NLP domains including machine translation, sentiment analysis, and question answering.",
+    "url": "https://arxiv.org/abs/2023.12345",
+    "meta": "Published in AAAI 2023, 15 pages, 127 citations"
+  },
+  {
+    "title": "Quantum Computing Applications in Machine Learning",
+    "authors": "Alice Johnson, Bob Wilson",
+    "orgs": "IBM Research, University of Oxford",
+    "abs": "We explore the intersection of quantum computing and machine learning, presenting novel quantum algorithms for optimization problems and demonstrating their potential advantages over classical approaches. Our experimental results show promising speedups for specific ML tasks.",
+    "url": "https://nature.com/articles/quantum-ml-2023",
+    "meta": "Nature Quantum Information, Vol 4, Article 42"
+  },
+  {
+    "title": "Federated Learning with Privacy Preservation",
+    "authors": "Sarah Lee, Michael Brown, Jennifer Davis",
+    "orgs": "Facebook AI Research, Carnegie Mellon University, Apple Inc.",
+    "abs": "This work addresses privacy concerns in federated learning by proposing a novel differential privacy mechanism that maintains model accuracy while protecting individual user data. We validate our approach on real-world datasets and demonstrate significant privacy improvements.",
+    "url": "https://proceedings.mlr.press/v139/federated2023.html",
+    "meta": "ICML 2023, Best Paper Award, 89 citations"
+  },
+  {
+    "title": "Reinforcement Learning for Autonomous Vehicle Navigation",
+    "authors": "Kevin Zhang, Lisa Wang, Robert Taylor",
+    "orgs": "Tesla AI, UC Berkeley, Waymo",
+    "abs": "We present a reinforcement learning framework for autonomous vehicle navigation in complex urban environments. Our approach combines deep Q-learning with imitation learning to achieve robust performance in real-world driving scenarios.",
+    "url": "https://ieeexplore.ieee.org/document/9876543",
+    "meta": "IEEE Transactions on Robotics, Vol 39, No 3, pp 456-472"
+  },
+  {
+    "title": "Explainable AI in Healthcare: Challenges and Opportunities",
+    "authors": "Dr. Emma Thompson, Prof. James Miller, Dr. Anna Rodriguez",
+    "orgs": "Mayo Clinic, Harvard Medical School, Johns Hopkins University",
+    "abs": "This review examines the current state of explainable AI in healthcare applications, discussing key challenges in model interpretability and regulatory compliance. We propose a framework for developing trustworthy AI systems in clinical settings.",
+    "url": "https://www.nejm.org/doi/full/10.1056/NEJMra2023456",
+    "meta": "New England Journal of Medicine, Impact Factor 91.2, 234 citations"
+  }
+]
