@@ -30,5 +30,14 @@ async def get_test_data():
     """Get test data"""
     return load_json("data/test_data.json") * 5
 
+@app.get("/api/stats")
+async def get_stats():
+    """Get data statistics"""
+    return {
+        "total_papers": 1000,
+        "latest_update": "2025/10/27"
+    }
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=12312, log_level="info")
