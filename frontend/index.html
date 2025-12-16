@@ -37,15 +37,6 @@
     <section class="search-section">
       <div class="search-container">
         <div class="search-row">
-          <div class="deep-search-checkbox">
-            <input 
-              type="checkbox" 
-              id="deepSearch" 
-              v-model="deepSearch"
-              class="checkbox-input"
-            />
-            <label for="deepSearch" class="checkbox-label">Deep Search</label>
-          </div>
           <div class="search-box">
             <input 
               type="text" 
@@ -66,6 +57,71 @@
               <path d="M13.5 4.5l-9 9M4.5 4.5l9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
+        </div>
+
+        <!-- Search Parameters -->
+        <div class="search-parameters">
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="queryUnderstanding"
+                class="checkbox-input"
+              />
+              Query Understanding
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="smartRerank"
+                class="checkbox-input"
+              />
+              Smart Rerank
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="useCache"
+                class="checkbox-input"
+              />
+              Use Cache
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="socialImpact"
+                class="checkbox-input"
+              />
+              Social Impact
+            </label>
+          </div>
+          <div class="divider"></div>
+          <div class="select-group">
+            <label class="select-label">Select Indexing Field:</label>
+            <div class="custom-dropdown" @click.stop>
+              <div class="dropdown-toggle" @click="toggleDropdown">
+                <span class="dropdown-text">{{ selectedFieldsText }}</span>
+                <svg class="dropdown-arrow" :class="{ 'open': isDropdownOpen }" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="dropdown-menu" v-show="isDropdownOpen">
+                <label 
+                  v-for="option in indexingFieldOptions" 
+                  :key="option.value"
+                  class="dropdown-item"
+                >
+                  <input 
+                    type="checkbox" 
+                    :checked="isFieldSelected(option.value)"
+                    @change="toggleField(option.value)"
+                    class="dropdown-checkbox"
+                  />
+                  <span>{{ option.label }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Recommended Queries -->
@@ -93,9 +149,41 @@
 
     <!-- Results Section -->
     <section class="results-section" v-if="hasSearched && !isLoading && results.length > 0">
+      <div class="cache-info" v-if="cacheMessage">
+        <svg class="cache-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2a6 6 0 0 1 6 6v1h-2V8a4 4 0 0 0-8 0v1H2V8a6 6 0 0 1 6-6z" fill="currentColor"/>
+          <rect x="3" y="8" width="10" height="6" rx="1" fill="currentColor"/>
+        </svg>
+        <span>{{ cacheMessage }}</span>
+      </div>
       <div class="results-header">
-        <h2 class="results-title">{{ results.length }} results found</h2>
-        <p class="results-subtitle" v-if="searchQuery">for "{{ searchQuery }}"</p>
+        <div class="results-info">
+          <h2 class="results-title">{{ results.length }} results found</h2>
+          <p class="results-subtitle" v-if="searchQuery">for "{{ searchQuery }}"</p>
+        </div>
+        <div class="sort-controls">
+          <span class="sort-label">Sort by:</span>
+          <button 
+            @click="setSortBy('relevance')" 
+            :class="['sort-btn', { active: sortBy === 'relevance' }]"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2v12M8 2l-3 3M8 2l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Relevance
+          </button>
+          <button 
+            @click="setSortBy('social_impact')" 
+            :class="['sort-btn', { active: sortBy === 'social_impact' }]"
+            :disabled="!socialImpact"
+            :title="!socialImpact ? 'Enable Social Impact first' : ''"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1l2 4 4.5.5-3.5 3 1 4.5L8 11l-4 2 1-4.5-3.5-3L6 5l2-4z" fill="currentColor"/>
+            </svg>
+            Social Impact
+          </button>
+        </div>
       </div>
 
       <div class="results-container">
@@ -117,6 +205,44 @@
                   <path d="M2 13.5a6 6 0 0 1 12 0v.5H2v-.5z" fill="currentColor"/>
                 </svg>
                 <span class="card-authors">{{ paper.authors }}</span>
+              </div>
+            </div>
+
+            <div class="card-meta-row" v-if="paper.orgs">
+              <div class="meta-item">
+                <svg class="meta-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z" fill="currentColor"/>
+                </svg>
+                <span class="card-orgs">{{ paper.orgs }}</span>
+              </div>
+            </div>
+
+            <div class="card-meta-row" v-if="paper.release_date">
+              <div class="meta-item">
+                <svg class="meta-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <rect x="2" y="3" width="12" height="11" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  <path d="M2 6h12M5 1v3M11 1v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="card-date">{{ paper.release_date }}</span>
+              </div>
+            </div>
+
+            <div class="social-impact-badge" v-if="paper.social_score !== null && paper.social_score !== undefined">
+              <div class="social-impact-label">
+                <svg class="social-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 1l2 4 4.5.5-3.5 3 1 4.5L8 11l-4 2 1-4.5-3.5-3L6 5l2-4z" fill="currentColor"/>
+                </svg>
+                <span>Social Impact</span>
+              </div>
+              <div class="social-impact-bar">
+                <div 
+                  class="social-impact-fill" 
+                  :style="{
+                    width: paper.social_score + '%',
+                    background: getSocialColor(paper.social_score)
+                  }"
+                ></div>
+                <span class="social-impact-score">{{ paper.social_score }}</span>
               </div>
             </div>
 

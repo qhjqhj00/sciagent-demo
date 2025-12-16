@@ -1,14 +1,9 @@
 const { createApp } = Vue;
 const api_url = 'https://api.rag.ac.cn/api';
-<<<<<<< HEAD
-=======
-
->>>>>>> 37673aac402615dde1ac0c5d65365cfe4c3c2aeb
 createApp({
   data() {
     return {
       searchQuery: '',
-      deepSearch: false,
       hasSearched: false,
       isLoading: false,
       results: [],
@@ -18,30 +13,77 @@ createApp({
       stats: null,
       searchTimer: 0,
       timerInterval: null,
+      // Search parameters
+      queryUnderstanding: false,
+      smartRerank: true,
+      useCache: true,
+      socialImpact: false,
+      cacheMessage: '',
+      sortBy: 'relevance', // 'relevance' or 'social_impact'
+      selectedIndexingFields: ['metadata', 'introduction', 'section', 'roc'],
+      indexingFieldOptions: [
+        { value: 'metadata', label: 'Meta Info' },
+        { value: 'introduction', label: 'Introduction' },
+        { value: 'section', label: 'Full Paper' },
+        { value: 'roc', label: 'RoC' }
+      ],
+      isDropdownOpen: false,
     };
   },
   computed: {
     totalPages() {
-      return Math.ceil(this.results.length / this.itemsPerPage);
+      return Math.ceil(this.sortedResults.length / this.itemsPerPage);
+    },
+    sortedResults() {
+      if (!this.results || this.results.length === 0) {
+        return [];
+      }
+      
+      // Create a copy to avoid mutating original array
+      const resultsCopy = [...this.results];
+      
+      if (this.sortBy === 'social_impact') {
+        // Sort by social_score (descending), treat null/undefined as 0
+        return resultsCopy.sort((a, b) => {
+          const scoreA = a.social_score ?? 0;
+          const scoreB = b.social_score ?? 0;
+          return scoreB - scoreA;
+        });
+      }
+      
+      // Default: keep original order (relevance)
+      return resultsCopy;
     },
     paginatedResults() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.results.slice(start, end);
+      return this.sortedResults.slice(start, end);
     },
     formattedTimer() {
       return this.searchTimer.toFixed(1);
+    },
+    selectedFieldsText() {
+      if (this.selectedIndexingFields.length === 0) {
+        return 'Select fields...';
+      }
+      const labels = this.selectedIndexingFields.map(value => {
+        const option = this.indexingFieldOptions.find(opt => opt.value === value);
+        return option ? option.label : value;
+      });
+      return labels.join(', ');
     }
+  },
+  async mounted() {
+    await this.loadConfig();
+    await this.loadStats();
+    document.addEventListener('click', this.closeDropdown);
   },
   beforeUnmount() {
     // Clean up timer when component unmounts
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
-  },
-  async mounted() {
-    await this.loadConfig();
-    await this.loadStats();
+    document.removeEventListener('click', this.closeDropdown);
   },
   methods: {
     async loadConfig() {
@@ -57,24 +99,35 @@ createApp({
     },
     async searchPapers(query) {
       try {
-        const endpoint = this.deepSearch ? '/deep_search' : '/search';
-        let url;
-        let response;
+        // Build URL with parameters
+        const params = new URLSearchParams();
+        params.append('query', query);
+        params.append('query_understanding', this.queryUnderstanding);
+        params.append('smart_rerank', this.smartRerank);
+        params.append('use_cache', this.useCache);
+        params.append('social_impact', this.socialImpact);
+        // Add selected indexing fields as multiple parameters
+        this.selectedIndexingFields.forEach(field => {
+          params.append('indexing_fields', field);
+        });
         
-        if (endpoint === '/deep_search') {
-          // Build URL with debug parameters for deep search
-          url = `${api_url}${endpoint}?query=${encodeURIComponent(query)}`;
-          console.log('Deep search URL:', url);
-          response = await fetch(url);
+        const url = `${api_url}/deep_search?${params.toString()}`;
+        console.log('Deep search URL:', url);
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        // Check if response includes cache info
+        if (data.cache_info) {
+          this.cacheMessage = data.cache_info;
+          this.results = data.results || [];
         } else {
-          url = `${api_url}${endpoint}?query=${encodeURIComponent(query)}`;
-          console.log('Regular search URL:', url);
-          response = await fetch(url);
+          this.cacheMessage = '';
+          this.results = data;
         }
-        this.results = await response.json();
       } catch (error) {
         console.error('Error searching papers:', error);
         this.results = [];
+        this.cacheMessage = '';
       }
     },
     async loadStats() {
@@ -126,6 +179,7 @@ createApp({
       this.results = [];
       this.currentPage = 1;
       this.searchTimer = 0;
+      this.cacheMessage = '';
       // Clear timer if running
       if (this.timerInterval) {
         clearInterval(this.timerInterval);
@@ -148,6 +202,45 @@ createApp({
       if (this.currentPage > 1) {
         this.currentPage--;
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    toggleField(value) {
+      const index = this.selectedIndexingFields.indexOf(value);
+      if (index > -1) {
+        this.selectedIndexingFields.splice(index, 1);
+      } else {
+        this.selectedIndexingFields.push(value);
+      }
+    },
+    isFieldSelected(value) {
+      return this.selectedIndexingFields.includes(value);
+    },
+    getSocialColor(score) {
+      if (score === null || score === undefined) return '';
+      // Gradient from blue (cold) to red (hot)
+      // 0-30: blue shades, 31-60: green/yellow, 61-100: orange/red
+      if (score <= 30) {
+        const intensity = Math.floor((score / 30) * 100);
+        return `hsl(210, 80%, ${85 - intensity * 0.3}%)`;
+      } else if (score <= 60) {
+        const intensity = Math.floor(((score - 30) / 30) * 100);
+        return `hsl(${120 - intensity * 0.6}, 70%, ${65 - intensity * 0.15}%)`;
+      } else {
+        const intensity = Math.floor(((score - 60) / 40) * 100);
+        return `hsl(${30 - intensity * 0.3}, ${80 + intensity * 0.15}%, ${55 - intensity * 0.15}%)`;
+      }
+    },
+    setSortBy(sortType) {
+      this.sortBy = sortType;
+      this.currentPage = 1; // Reset to first page when sorting changes
+    },
+    closeDropdown(event) {
+      // Close dropdown when clicking outside
+      if (!this.$el.querySelector('.custom-dropdown').contains(event.target)) {
+        this.isDropdownOpen = false;
       }
     }
   }
