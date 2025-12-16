@@ -26,10 +26,44 @@ async def get_config():
     """Get configuration data"""
     return load_json("data/config.json")
 
-@app.get("/api/test_data")
-async def get_test_data():
-    """Get test data"""
-    return load_json("data/test_data.json") * 5
+@app.get("/api/search")
+async def search(query: str = "Agentic Reinforcement Learning"):
+    """Search for papers by calling retrieval API"""
+    import httpx
+    
+    url = "http://120.92.112.87:25620/api/api/retrieval/retrieve"
+    data = {
+        "queries": [query],
+        "topk": 50,
+        # "embedding_threshold": 0.5,
+        # "knn_candidate_num": 100,
+        # "return_scores": True
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=data)
+            response.raise_for_status()
+            result = response.json()
+            
+            # Extract and format the results
+            formatted_results = []
+            if result.get("status") == "success":
+                for item in result["result"][0]:
+                    formatted_item = {
+                        "title": item.get("title", ""),
+                        "abs": item.get("abstract", ""),
+                        "authors": "",
+                        "orgs": "",
+                        "url": "",
+                        "meta": ""
+                    }
+                    formatted_results.append(formatted_item)
+            return formatted_results
+            
+    except Exception as e:
+        # Fallback to test data if API call fails
+        return load_json("data/test_data.json") * 5
 
 @app.get("/api/stats")
 async def get_stats():

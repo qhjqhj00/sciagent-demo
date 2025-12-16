@@ -1,5 +1,5 @@
 const { createApp } = Vue;
-
+const api_url = 'https://api.rag.ac.cn/api';
 createApp({
   data() {
     return {
@@ -8,7 +8,6 @@ createApp({
       isLoading: false,
       results: [],
       recommendedQueries: [],
-      testData: [],
       currentPage: 1,
       itemsPerPage: 10,
       stats: null,
@@ -37,7 +36,6 @@ createApp({
   },
   async mounted() {
     await this.loadConfig();
-    await this.loadTestData();
     await this.loadStats();
   },
   methods: {
@@ -52,12 +50,13 @@ createApp({
         this.recommendedQueries = ['Deep Learning', 'Quantum Computing', 'Federated Learning'];
       }
     },
-    async loadTestData() {
+    async searchPapers(query) {
       try {
-        const response = await fetch(`${api_url}/test_data`);
-        this.testData = await response.json();
+        const response = await fetch(`${api_url}/search?query=${encodeURIComponent(query)}`);
+        this.results = await response.json();
       } catch (error) {
-        console.error('Error loading test data:', error);
+        console.error('Error searching papers:', error);
+        this.results = [];
       }
     },
     async loadStats() {
@@ -83,17 +82,20 @@ createApp({
         this.searchTimer += 0.1;
       }, 100);
       
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 500)); // TODO: replace with actual API call
-      
-      // Return all test data regardless of query
-      this.results = this.testData;
-      this.isLoading = false;
-      
-      // Stop timer
-      if (this.timerInterval) {
-        clearInterval(this.timerInterval);
-        this.timerInterval = null;
+      // Call searchPapers API
+      try {
+        await this.searchPapers(this.searchQuery);
+      } catch (error) {
+        console.error('Error in handleSearch:', error);
+        this.results = [];
+      } finally {
+        this.isLoading = false;
+        
+        // Stop timer
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
       }
     },
     searchWithQuery(query) {
