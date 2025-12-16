@@ -41,7 +41,7 @@ async def search(query: str = "Agentic Reinforcement Learning"):
     }
     
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(url, json=data)
             response.raise_for_status()
             result = response.json()
@@ -49,19 +49,131 @@ async def search(query: str = "Agentic Reinforcement Learning"):
             # Extract and format the results
             formatted_results = []
             if result.get("status") == "success":
-                for item in result["result"][0]:
+                for item in result["result"]:
+                    authors = item.get("authors", [])
+                    if authors:
+                        authors_str = ", ".join([author.get("name", "") for author in authors])
+                    else:
+                        authors_str = ""
                     formatted_item = {
                         "title": item.get("title", ""),
                         "abs": item.get("abstract", ""),
-                        "authors": "",
+                        # "abs": item.get("tldr", ""),
+                        "authors": authors_str,
                         "orgs": "",
-                        "url": "",
+                        "url": item.get("urls", ""),
                         "meta": ""
                     }
                     formatted_results.append(formatted_item)
             return formatted_results
             
     except Exception as e:
+        # Fallback to test data if API call fails
+        print(f"Error in search: {e}")
+        return load_json("data/test_data.json") * 5
+
+# @app.get("/api/deep_search")
+# async def deep_search(query: str = "Agentic Reinforcement Learning"):
+#     import httpx
+    
+#     url = "http://120.92.112.87:25620/api/api/search/fast_search"
+#     data = {
+#         "query": query,
+#     }
+    
+#     try:
+#         async with httpx.AsyncClient(timeout=120.0) as client:
+#             response = await client.post(url, json=data)
+#             response.raise_for_status()
+#             result = response.json()
+            
+#             # Extract and format the results
+#             formatted_results = []
+#             if result.get("status") == "success":
+#                 for item in result["result"]:
+#                     authors = item.get("authors", [])
+#                     if authors:
+#                         authors_str = ", ".join([author.get("name", "") for author in authors])
+#                     else:
+#                         authors_str = ""
+#                     formatted_item = {
+#                         "title": item.get("title", ""),
+#                         "abs": item.get("abstract", ""),
+#                         # "abs": item.get("tldr", ""),
+#                         "authors": authors_str,
+#                         "orgs": "",
+#                         "url": item.get("urls", ""),
+#                         "meta": f"Relevance: {item.get('score', '0.0'):.3f}"
+#                     }
+#                     formatted_results.append(formatted_item)
+#             return formatted_results
+            
+#     except Exception as e:
+#         # Log the error
+#         print(f"Error in deep_search: {e}")
+#         # Fallback to test data if API call fails
+#         return load_json("data/test_data.json") * 5
+
+@app.get("/api/deep_search")
+async def deep_search(
+    query: str = "Agentic Reinforcement Learning", 
+):
+    import httpx
+
+    url = "http://120.92.112.87:25620/api/api/retrieval_for_test/search"
+    search_funcs = []
+
+    query_rewrite = False
+    coarse_rerank = True
+    fine_rerank = True
+    metadata = True
+    introduction = True
+    section = True
+    roc = True
+
+    if metadata: search_funcs.append("metadata")
+    if introduction: search_funcs.append("introduction")
+    if section: search_funcs.append("section")
+    if roc: search_funcs.append("roc")
+        
+    data = {
+        "queries": [query],
+        "use_query_decomposition": query_rewrite,
+        "use_coarse_rerank": coarse_rerank,
+        "use_fine_rerank": fine_rerank,
+        "search_funcs": search_funcs,
+    }
+    print(data)
+    try:
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            response = await client.post(url, json=data)
+            response.raise_for_status()
+            result = response.json()[0]
+            
+            # Extract and format the results
+            formatted_results = []
+            if result.get("status") == "success":
+                for item in result["result"]:
+                    authors = item.get("authors", [])
+                    if authors:
+                        authors_str = ", ".join([author.get("name", "") for author in authors])
+                    else:
+                        authors_str = ""
+                    formatted_item = {
+                        "title": item.get("title", ""),
+                        # "abs": item.get("abstract", ""),
+                        "abs": item.get("tldr", ""),
+                        "authors": authors_str,
+                        "orgs": "",
+                        "url": item.get("urls", ""),
+                        "meta": f"Relevance: {item.get('score', '0.0'):.3f}"
+                    }
+                    formatted_results.append(formatted_item)
+            return formatted_results
+            
+    except Exception as e:
+        # Log the error
+        print(f"Error in deep_search: {e}")
         # Fallback to test data if API call fails
         return load_json("data/test_data.json") * 5
 

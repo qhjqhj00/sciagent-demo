@@ -1,9 +1,14 @@
 const { createApp } = Vue;
 const api_url = 'https://api.rag.ac.cn/api';
+<<<<<<< HEAD
+=======
+
+>>>>>>> 37673aac402615dde1ac0c5d65365cfe4c3c2aeb
 createApp({
   data() {
     return {
       searchQuery: '',
+      deepSearch: false,
       hasSearched: false,
       isLoading: false,
       results: [],
@@ -12,7 +17,7 @@ createApp({
       itemsPerPage: 10,
       stats: null,
       searchTimer: 0,
-      timerInterval: null
+      timerInterval: null,
     };
   },
   computed: {
@@ -52,7 +57,20 @@ createApp({
     },
     async searchPapers(query) {
       try {
-        const response = await fetch(`${api_url}/search?query=${encodeURIComponent(query)}`);
+        const endpoint = this.deepSearch ? '/deep_search' : '/search';
+        let url;
+        let response;
+        
+        if (endpoint === '/deep_search') {
+          // Build URL with debug parameters for deep search
+          url = `${api_url}${endpoint}?query=${encodeURIComponent(query)}`;
+          console.log('Deep search URL:', url);
+          response = await fetch(url);
+        } else {
+          url = `${api_url}${endpoint}?query=${encodeURIComponent(query)}`;
+          console.log('Regular search URL:', url);
+          response = await fetch(url);
+        }
         this.results = await response.json();
       } catch (error) {
         console.error('Error searching papers:', error);
@@ -134,4 +152,3 @@ createApp({
     }
   }
 }).mount('#app');
-
