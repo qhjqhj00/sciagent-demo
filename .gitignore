@@ -5,7 +5,7 @@ __pycache__/
 data/api.json
 # C extensions
 *.so
-
+data
 # Distribution / packaging
 .Python
 build/
